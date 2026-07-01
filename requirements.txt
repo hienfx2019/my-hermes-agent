@@ -1,4 +1,3 @@
-git+https://github.com/NousResearch/hermes-agent.git@main
 fastapi
 uvicorn[standard]
 ptyprocess
