@@ -1,39 +1,35 @@
 #!/usr/bin/env bash
 set -e
 
-echo "==> Install Python dependencies"
+echo "==> Check versions"
+python --version
+pip --version
+node --version || true
+npm --version || true
+
+echo "==> Upgrade pip"
 pip install --upgrade pip
-pip install -r requirements.txt
 
-echo "==> Clone Hermes source for web frontend"
-rm -rf /tmp/hermes-agent
-git clone https://github.com/NousResearch/hermes-agent.git /tmp/hermes-agent
+echo "==> Install existing requirements if any"
+if [ -f requirements.txt ]; then
+  pip install -r requirements.txt
+fi
 
-echo "==> Build Hermes dashboard frontend"
-cd /tmp/hermes-agent/web
+echo "==> Clone Hermes source"
+rm -rf vendor/hermes-agent
+mkdir -p vendor
+git clone --depth 1 https://github.com/NousResearch/hermes-agent.git vendor/hermes-agent
+
+echo "==> Install Hermes from source with dashboard dependencies"
+cd vendor/hermes-agent
+pip install -e ".[web,pty]"
+
+echo "==> Build Hermes Dashboard frontend"
+cd web
 npm install
 npm run build
 
-echo "==> Copy built frontend into installed hermes_cli package"
-python - <<'PY'
-import hermes_cli
-import pathlib
-import shutil
-
-pkg = pathlib.Path(hermes_cli.__file__).parent
-src = pathlib.Path("/tmp/hermes-agent/hermes_cli/web_dist")
-dst = pkg / "web_dist"
-
-print("Package:", pkg)
-print("Source web_dist:", src)
-print("Target web_dist:", dst)
-
-if not src.exists():
-    raise SystemExit("web_dist not found after npm build")
-
-if dst.exists():
-    shutil.rmtree(dst)
-
-shutil.copytree(src, dst)
-print("Copied web_dist OK")
-PY
+echo "==> Verify frontend build"
+cd ..
+test -d hermes_cli/web_dist
+echo "Frontend build OK"
