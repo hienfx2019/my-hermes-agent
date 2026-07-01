@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: hermes-api-server
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "hermes api start --host 0.0.0.0 --port $PORT"
