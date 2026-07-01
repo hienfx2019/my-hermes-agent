@@ -1,1 +1,3 @@
 hermes-agent
+fastapi
+uvicorn
